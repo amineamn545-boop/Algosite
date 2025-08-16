@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HawkEye Strategy - استراتيجية التداول المبرمجة</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2d1b4e 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00d4ff, #5a67d8, #ed64a6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: #ffffff;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .nav-links a:hover::before {
+            left: 100%;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .hero-content {
+            max-width: 800px;
+            z-index: 2;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #00d4ff, #5a67d8, #ed64a6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.2); }
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            color: #a0aec0;
+            line-height: 1.6;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem 3rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section h2 {
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(45deg, #00d4ff, #5a67d8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+            margin-top: 4rem;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(0, 212, 255, 0.1), rgba(90, 103, 216, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #00d4ff;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        .feature-card p {
+            color: #a0aec0;
+            line-height: 1.6;
+        }
+
+        .strategy-section {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 3rem;
+            margin: 3rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .indicators {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .indicator {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(90, 103, 216, 0.1));
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .indicator:hover {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(90, 103, 216, 0.2));
+        }
+
+        .indicator-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #00d4ff;
+        }
+
+        .indicator-desc {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        .performance-section {
+            text-align: center;
+            padding: 4rem 0;
+        }
+
+        .performance-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .stat {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #a0aec0;
+            font-size: 1.1rem;
+        }
+
+        .footer {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3));
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 3rem 2rem 2rem;
+            text-align: center;
+            margin-top: 5rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .contact-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .contact-item h4 {
+            color: #00d4ff;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.2rem;
+            }
+            
+            .section h2 {
+                font-size: 2rem;
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">🦅 HawkEye Strategy</a>
+            <ul class="nav-links">
+                <li><a href="#home">الرئيسية</a></li>
+                <li><a href="#strategy">الاستراتيجية</a></li>
+                <li><a href="#indicators">المؤشرات</a></li>
+                <li><a href="#performance">الأداء</a></li>
+                <li><a href="#contact">اتصل بنا</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="pulse">HawkEye Strategy</h1>
+            <p>استراتيجية تداول مبرمجة متطورة تعتمد على مؤشرات تقنية قوية لتحقيق أرباح مستقرة في الأسواق المالية</p>
+            <a href="#strategy" class="cta-button">اكتشف الاستراتيجية</a>
+        </div>
+    </section>
+
+    <section id="strategy" class="section">
+        <h2>🎯 نظرة عامة على الاستراتيجية</h2>
+        <div class="strategy-section">
+            <p style="font-size: 1.2rem; line-height: 1.8; color: #e2e8f0; text-align: center; margin-bottom: 2rem;">
+                تعتمد استراتيجية HawkEye على تحليل متقدم لحركة الأسعار باستخدام مجموعة مختارة من المؤشرات التقنية 
+                التي تعمل معاً لتحديد نقاط الدخول والخروج المثلى في السوق
+            </p>
+            
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>تحليل متعدد الأطر الزمنية</h3>
+                    <p>تحليل شامل عبر عدة أطر زمنية لضمان دقة الإشارات وتقليل المخاطر</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>إشارات عالية الدقة</h3>
+                    <p>نسبة نجاح عالية في تحديد نقاط الدخول والخروج المربحة</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>تنفيذ سريع</h3>
+                    <p>استجابة فورية لتغيرات السوق وتنفيذ الصفقات بسرعة</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>إدارة المخاطر</h3>
+                    <p>نظام متطور لإدارة المخاطر وحماية رأس المال</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>تداول آلي</h3>
+                    <p>تشغيل كامل بدون تدخل بشري مع مراقبة مستمرة</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>تقارير مفصلة</h3>
+                    <p>تحليل شامل للأداء مع تقارير يومية وأسبوعية</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="indicators" class="section">
+        <h2>🔧 المؤشرات المستخدمة</h2>
+        <div class="strategy-section">
+            <p style="font-size: 1.1rem; line-height: 1.6; color: #e2e8f0; text-align: center; margin-bottom: 2rem;">
+                تستخدم الاستراتيجية مجموعة من أقوى المؤشرات التقنية المبرمجة بدقة لتحقيق أفضل النتائج
+            </p>
+            
+            <div class="indicators">
+                <div class="indicator">
+                    <div class="indicator-name">RSI</div>
+                    <div class="indicator-desc">مؤشر القوة النسبية لتحديد مناطق التشبع</div>
+                </div>
+                <div class="indicator">
+                    <div class="indicator-name">MACD</div>
+                    <div class="indicator-desc">مؤشر تقارب وتباعد المتوسطات المتحركة</div>
+                </div>
+                <div class="indicator">
+                    <div class="indicator-name">Bollinger Bands</div>
+                    <div class="indicator-desc">نطاقات بولنجر لقياس التذبذب</div>
+                </div>
+                <div class="indicator">
+                    <div class="indicator-name">Stochastic</div>
+                    <div class="indicator-desc">مؤشر العشوائية للزخم</div>
+                </div>
+                <div class="indicator">
+                    <div class="indicator-name">Moving Averages</div>
+                    <div class="indicator-desc">المتوسطات المتحركة لتحديد الاتجاه</div>
+                </div>
+                <div class="indicator">
+                    <div class="indicator-name">Volume</div>
+                    <div class="indicator-desc">تحليل حجم التداول</div>
+                </div>
+                <div class="indicator">
+                    <div class="indicator-name">ADX</div>
+                    <div class="indicator-desc">مؤشر قوة الاتجاه</div>
+                </div>
+                <div class="indicator">
+                    <div class="indicator-name">Fibonacci</div>
+                    <div class="indicator-desc">مستويات فيبوناتشي للارتداد</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="performance" class="section performance-section">
+        <h2>📊 إحصائيات الأداء</h2>
+        <div class="performance-stats">
+            <div class="stat">
+                <div class="stat-number">87%</div>
+                <div class="stat-label">نسبة نجاح الصفقات</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">+24%</div>
+                <div class="stat-label">العائد الشهري المتوسط</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">2:1</div>
+                <div class="stat-label">نسبة المكافأة للمخاطرة</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">98%</div>
+                <div class="stat-label">معدل التشغيل</div>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact" class="footer">
+        <div class="footer-content">
+            <h2 style="margin-bottom: 2rem;">تواصل معنا</h2>
+            <div class="contact-info">
+                <div class="contact-item">
+                    <h4>📧 البريد الإلكتروني</h4>
+                    <p>info@hawkeyestrategy.com</p>
+                </div>
+                <div class="contact-item">
+                    <h4>📱 الهاتف</h4>
+                    <p>+1 (555) 123-4567</p>
+                </div>
+                <div class="contact-item">
+                    <h4>💬 الدعم الفني</h4>
+                    <p>support@hawkeyestrategy.com</p>
+                </div>
+            </div>
+            <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 2rem; margin-top: 2rem; color: #a0aec0;">
+                <p>&copy; 2025 HawkEye Strategy. جميع الحقوق محفوظة.</p>
+                <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                    تحذير: التداول في الأسواق المالية ينطوي على مخاطر. الأداء السابق لا يضمن النتائج المستقبلية.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Navbar background change on scroll
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 100) {
+                navbar.style.background = 'rgba(0, 0, 0, 0.8)';
+            } else {
+                navbar.style.background = 'rgba(255, 255, 255, 0.05)';
+            }
+        });
+
+        // Add fade-in animation for elements
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements for animation
+        document.querySelectorAll('.feature-card, .indicator, .stat').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'all 0.6s ease';
+            observer.observe(el);
+        });
+
+        // Add floating animation to indicators
+        document.querySelectorAll('.indicator').forEach((indicator, index) => {
+            indicator.style.animationDelay = `${index * 0.1}s`;
+            indicator.classList.add('float');
+        });
+
+        // Add pulsing effect to stats on hover
+        document.querySelectorAll('.stat').forEach(stat => {
+            stat.addEventListener('mouseenter', () => {
+                stat.querySelector('.stat-number').style.animation = 'pulse 1s infinite';
+            });
+            stat.addEventListener('mouseleave', () => {
+                stat.querySelector('.stat-number').style.animation = '';
+            });
+        });
+    </script>
+</body>
+</html>
